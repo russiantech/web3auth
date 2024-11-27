@@ -51,7 +51,7 @@
     font-size: 12.5px;
 }
 .coin {
-    background-color: #fff;
+    /* background-color: #fff; */
     border: none;
 }
 .coin-img {
@@ -104,7 +104,7 @@
     margin-bottom: 1rem;
 }
 .modal-content {
-    background-color: #0c0e29;
+    /* background-color: #0c0e29; */
 }
 .modal-header {
     border-bottom: none;
