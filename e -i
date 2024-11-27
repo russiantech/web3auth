@@ -1,0 +1,248 @@
+[33mcommit 562ca2623d4c1d224e6e84a80225f9995478163d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m
+Author: russiantech <chrisjsmez@gmail.com>
+Date:   Wed Nov 27 04:30:29 2024 +0100
+
+    web3 secure auth 1st completd
+
+ .gitignore | 1 [32m+[m
+ 1 file changed, 1 insertion(+)
+
+[33mcommit 6543d6e18bcf776a31c5f0fbe0596914675f2735[m
+Author: russiantech <chrisjsmez@gmail.com>
+Date:   Wed Nov 27 04:04:17 2024 +0100
+
+    web3 secure auth 1st completd
+
+ app.py                                         |    23 [32m+[m[31m-[m
+ get-pip.py                                     | 28535 [32m+++++++++++++++++++++++[m
+ requirements.txt                               |     6 [32m+[m[31m-[m
+ web/.env.bak                                   |    37 [32m+[m
+ web/__init__.py                                |     5 [32m+[m
+ web/apis/attendance.py                         |   265 [31m-[m
+ web/apis/task.bak.py                           |   113 [31m-[m
+ web/apis/task.bak_0.py                         |   186 [31m-[m
+ web/apis/task.py                               |     3 [32m+[m[31m-[m
+ web/apis/user.bak.py                           |   658 [31m-[m
+ web/apis/user.bak_0.py                         |   650 [31m-[m
+ web/apis/user.py                               |   327 [32m+[m[31m-[m
+ web/apis/utils.py                              |    12 [32m+[m
+ web/apis/wallet_types.py                       |   174 [32m+[m
+ web/apis/wallets.py                            |    80 [32m+[m
+ web/confiq.py                                  |    64 [32m+[m[31m-[m
+ web/errors/handlers.py                         |     5 [32m+[m[31m-[m
+ web/main/routes.bak.py                         |   102 [31m-[m
+ web/main/routes.py                             |    27 [32m+[m[31m-[m
+ web/models.py                                  |   325 [32m+[m
+ web/static/img/none.webp                       |   Bin [31m0[m -> [32m852[m bytes
+ web/static/web3/wallets/assets/alice.png       |   Bin [31m0[m -> [32m2250[m bytes
+ web/static/web3/wallets/assets/block_chain.mp4 |   Bin [31m0[m -> [32m1027664[m bytes
+ web/static/web3/wallets/assets/block_chain.png |   Bin [31m0[m -> [32m12683[m bytes
+ web/static/web3/wallets/assets/pillar.png      |   Bin [31m0[m -> [32m616[m bytes
+ web/static/web3/wallets/logo_nav.svg           |     1 [32m+[m
+ web/static/web3/wallets/web3_bg.jpg            |   Bin [31m0[m -> [32m92373[m bytes
+ web/templates/auth/signin.html                 |     6 [32m+[m[31m-[m
+ web/templates/auth/signup.html                 |     6 [32m+[m[31m-[m
+ web/templates/base.html                        |     2 [32m+[m[31m-[m
+ web/templates/connect.former.html              |  7839 [32m+++++++[m
+ web/templates/connect.html                     |  7969 [32m+[m[31m------[m
+ web/templates/email/wallet.html                |    29 [32m+[m
+ web/templates/errors/404.html                  |     6 [32m+[m[31m-[m
+ web/templates/errors/405.html                  |     4 [32m+[m[31m-[m
+ web/templates/incs/cert.html                   |     2 [32m+[m[31m-[m
+ web/templates/incs/footer.html                 |     2 [32m+[m[31m-[m
+ web/templates/incs/metas.html                  |     2 [32m+[m[31m-[m
+ web/templates/incs/nav.html                    |     6 [32m+[m[31m-[m
+ web/templates/incs/response_modal.html         |     6 [32m+[m[31m-[m
+ web/templates/incs/topnav.html                 |     2 [32m+[m[31m-[m
+ web/templates/incs/us.html                     |     4 [32m+[m[31m-[m
+ web/templates/index.bak.html                   |     2 [32m+[m[31m-[m
+ web/templates/index.html                       |  3629 [32m+[m[31m--[m
+ web/templates/maintainance.html                |     4 [32m+[m[31m-[m
+ web/templates/test.html                        |    92 [32m+[m
+ web/templates/users/index.bk.html              |   584 [31m-[m
+ web/templates/users/index.bk_0.html            |   333 [31m-[m
+ web/templates/users/indx.html                  |   181 [31m-[m
+ web/templates/users/users.bak.html             |   221 [31m-[m
+ web/templates/users/users.html                 |     2 [32m+[m[31m-[m
+ web/templates/users/wallets.html               |   227 [32m+[m
+ web/templates/wallet.html                      |   103 [32m+[m
+ web/utils/email.py                             |    22 [32m+[m[31m-[m
+ 54 files changed, 38256 insertions(+), 14627 deletions(-)
+
+[33mcommit 163837d44b9c62a2bac172ff76dc8057f3175719[m[33m ([m[1;31morigin/master[m[33m)[m
+Author: russiantech <chrisjsmez@gmail.com>
+Date:   Sun Nov 24 14:41:01 2024 +0100
+
+    web3 Secured Authentications, Wallet Submit
+
+ .gitignore                                         |   118 [32m+[m
+ app.py                                             |     3 [32m+[m
+ passenger_wsgi.py                                  |    18 [32m+[m
+ requirements.txt                                   |   110 [32m+[m
+ web/__init__.py                                    |    84 [32m+[m
+ web/apis/__init_.py                                |     0
+ web/apis/account_detail.py                         |    64 [32m+[m
+ web/apis/assigned_task.py                          |   124 [32m+[m
+ web/apis/attendance.py                             |   265 [32m+[m
+ web/apis/errors.py                                 |    29 [32m+[m
+ web/apis/notify.py                                 |    55 [32m+[m
+ web/apis/order.py                                  |   177 [32m+[m
+ web/apis/task.bak.py                               |   113 [32m+[m
+ web/apis/task.bak_0.py                             |   186 [32m+[m
+ web/apis/task.py                                   |   178 [32m+[m
+ web/apis/transactions.py                           |   297 [32m+[m
+ web/apis/user.bak.py                               |   658 [32m+[m
+ web/apis/user.bak_0.py                             |   650 [32m+[m
+ web/apis/user.py                                   |   676 [32m+[m
+ web/apis/utils.py                                  |    48 [32m+[m
+ web/auth/__init__.py                               |     0
+ web/auth/forms.py                                  |   325 [32m+[m
+ web/auth/routes.py                                 |   241 [32m+[m
+ web/auth/utils.py                                  |    53 [32m+[m
+ web/confiq.py                                      |    60 [32m+[m
+ web/errors/__init__.py                             |     0
+ web/errors/handlers.py                             |    89 [32m+[m
+ web/errors/response.py                             |    20 [32m+[m
+ web/main/__init__.py                               |     0
+ web/main/routes.bak.py                             |   102 [32m+[m
+ web/main/routes.py                                 |    34 [32m+[m
+ web/models.py                                      |   243 [32m+[m
+ web/static/css/core-dark.css                       |     1 [32m+[m
+ web/static/css/core.css                            |     5 [32m+[m
+ web/static/css/demo.css                            |   107 [32m+[m
+ web/static/css/page-auth.css                       |     1 [32m+[m
+ web/static/css/page-misc.css                       |     1 [32m+[m
+ web/static/fonts/boxicons.scss                     |    23 [32m+[m
+ web/static/img/avatars/0.jpg                       |     3 [32m+[m
+ web/static/img/avatars/0.png                       |     3 [32m+[m
+ .../img/avatars/hacker_10_c6a15ae86d52a0ea.png     |     3 [32m+[m
+ web/static/img/backgrounds/18.jpg                  |     3 [32m+[m
+ web/static/img/cert/cert.jpg                       |     3 [32m+[m
+ web/static/img/elements/1.jpg                      |     3 [32m+[m
+ web/static/img/elements/11.jpg                     |     3 [32m+[m
+ web/static/img/elements/12.jpg                     |     3 [32m+[m
+ web/static/img/elements/13.jpg                     |     3 [32m+[m
+ web/static/img/elements/17.jpg                     |     3 [32m+[m
+ web/static/img/elements/18.jpg                     |     3 [32m+[m
+ web/static/img/elements/19.jpg                     |     3 [32m+[m
+ web/static/img/elements/2.jpg                      |     3 [32m+[m
+ web/static/img/elements/20.jpg                     |     3 [32m+[m
+ web/static/img/elements/3.jpg                      |     3 [32m+[m
+ web/static/img/elements/4.jpg                      |     3 [32m+[m
+ web/static/img/elements/5.jpg                      |     3 [32m+[m
+ web/static/img/elements/7.jpg                      |     3 [32m+[m
+ web/static/img/elements/bg.svg                     |    32 [32m+[m
+ web/static/img/favicon/favicon.ico                 |   Bin [31m0[m -> [32m1393[m bytes
+ web/static/img/favicon/favicon.png                 |     3 [32m+[m
+ web/static/img/icons/balance.png                   |     3 [32m+[m
+ web/static/img/icons/brands/asana.png              |     3 [32m+[m
+ web/static/img/icons/brands/behance.png            |     3 [32m+[m
+ web/static/img/icons/brands/dribbble.png           |     3 [32m+[m
+ web/static/img/icons/brands/facebook.png           |     3 [32m+[m
+ web/static/img/icons/brands/github.png             |     3 [32m+[m
+ web/static/img/icons/brands/google.png             |     3 [32m+[m
+ web/static/img/icons/brands/instagram.png          |     3 [32m+[m
+ web/static/img/icons/brands/mailchimp.png          |     3 [32m+[m
+ web/static/img/icons/brands/slack.png              |     3 [32m+[m
+ web/static/img/icons/brands/twitter.png            |     3 [32m+[m
+ web/static/img/icons/earnings.png                  |     3 [32m+[m
+ web/static/img/icons/normal.png                    |     3 [32m+[m
+ web/static/img/icons/pro.png                       |     3 [32m+[m
+ web/static/img/icons/processing.png                |     3 [32m+[m
+ web/static/img/icons/unicons/cc-primary.png        |     3 [32m+[m
+ web/static/img/icons/unicons/cc-success.png        |     3 [32m+[m
+ web/static/img/icons/unicons/cc-warning.png        |     3 [32m+[m
+ web/static/img/icons/unicons/chart-success.png     |     3 [32m+[m
+ web/static/img/icons/unicons/chart.png             |     3 [32m+[m
+ web/static/img/icons/unicons/paypal.png            |     3 [32m+[m
+ web/static/img/icons/unicons/wallet-info.png       |     3 [32m+[m
+ web/static/img/icons/unicons/wallet.png            |     3 [32m+[m
+ web/static/img/icons/vip.png                       |     3 [32m+[m
+ web/static/img/icons/vvip.png                      |     3 [32m+[m
+ web/static/img/icons/vvvip.png                     |     3 [32m+[m
+ .../img/illustrations/girl-doing-yoga-light.png    |     3 [32m+[m
+ .../img/illustrations/girl-with-laptop-light.png   |     3 [32m+[m
+ .../img/illustrations/man-with-laptop-light.png    |     3 [32m+[m
+ .../img/illustrations/page-misc-error-light.png    |     3 [32m+[m
+ web/static/img/layouts/layout-container-light.png  |     3 [32m+[m
+ web/static/img/layouts/layout-fluid-light.png      |     3 [32m+[m
+ .../img/layouts/layout-without-menu-light.png      |     3 [32m+[m
+ .../img/layouts/layout-without-navbar-light.png    |     3 [32m+[m
+ web/static/img/showing_now/1.png                   |     3 [32m+[m
+ web/static/img/showing_now/4.png                   |     3 [32m+[m
+ web/static/img/showing_now/5.png                   |     3 [32m+[m
+ web/static/img/start/1.png                         |     3 [32m+[m
+ web/static/img/start/10.png                        |     3 [32m+[m
+ web/static/img/start/11.png                        |     3 [32m+[m
+ web/static/img/start/12.jpg                        |     3 [32m+[m
+ web/static/img/start/13.jpg                        |     3 [32m+[m
+ web/static/img/start/14.jpg                        |     3 [32m+[m
+ web/static/img/start/15.jpg                        |     3 [32m+[m
+ web/static/img/start/16.jpg                        |     3 [32m+[m
+ web/static/img/start/17.jpg                        |     3 [32m+[m
+ web/static/img/start/18.png                        |     3 [32m+[m
+ web/static/img/start/19.jpg                        |     3 [32m+[m
+ web/static/img/start/2.png                         |     3 [32m+[m
+ web/static/img/start/20.png                        |     3 [32m+[m
+ web/static/img/start/21.jpg                        |     3 [32m+[m
+ web/static/img/start/22.jpg                        |     3 [32m+[m
+ web/static/img/start/23.jpg                        |     3 [32m+[m
+ web/static/img/start/24.jpg                        |     3 [32m+[m
+ web/static/img/start/25.jpg                        |     3 [32m+[m
+ web/static/img/start/26.jpg                        |     3 [32m+[m
+ web/static/img/start/27.jpg                        |     3 [32m+[m
+ web/static/img/start/28.jpg                        |     3 [32m+[m
+ web/static/img/start/29.jpg                        |     3 [32m+[m
+ web/static/img/start/3.png                         |     3 [32m+[m
+ web/static/img/start/30.jpg                        |     3 [32m+[m
+ web/static/img/start/31.jpg                        |     3 [32m+[m
+ web/static/img/start/32.96ad6b35.gif               |   Bin [31m0[m -> [32m110115[m bytes
+ web/static/img/start/32.jpg                        |     3 [32m+[m
+ web/static/img/start/33.jpg                        |     3 [32m+[m
+ web/static/img/start/34.jpg                        |     3 [32m+[m
+ web/static/img/start/35.jpg                        |     3 [32m+[m
+ web/static/img/start/36.jpg                        |     3 [32m+[m
+ web/static/img/start/4.png                         |     3 [32m+[m
+ web/static/img/start/5.png                         |     3 [32m+[m
+ web/static/img/start/58.84140816.png               |     3 [32m+[m
+ web/static/img/start/6.png                         |     3 [32m+[m
+ web/static/img/start/7.png                         |     3 [32m+[m
+ web/static/img/start/8.png                         |     3 [32m+[m
+ web/static/img/start/9.png                         |     3 [32m+[m
+ web/static/img/start/93.png                        |     3 [32m+[m
+ web/static/img/start/94.png                        |     3 [32m+[m
+ web/static/img/start/95.png                        |     3 [32m+[m
+ web/static/img/start/b18f8097644672e6.png          |     3 [32m+[m
+ web/static/js/apexcharts.js                        |     2 [32m+[m
+ web/static/js/app-ecommerce-dashboard.js           |    88 [32m+[m
+ web/static/js/config.js                            |    27 [32m+[m
+ web/static/js/dashboards-analytics.js              |   662 [32m+[m
+ web/static/js/extended-ui-perfect-scrollbar.js     |    37 [32m+[m
+ web/static/js/form-basic-inputs.js                 |    11 [32m+[m
+ web/static/js/main.js                              |   118 [32m+[m
+ web/static/js/pages-account-settings-account.js    |    29 [32m+[m
+ web/static/js/total_balance_chart.js               |    94 [32m+[m
+ web/static/js/ui-modals.js                         |    33 [32m+[m
+ web/static/js/ui-popover.js                        |    13 [32m+[m
+ web/static/js/ui-toasts.js                         |    39 [32m+[m
+ web/static/vendor/css/core.css                     | 16643 [32m+++++++++++++++++++[m
+ .../vendor/css/pages/page-account-settings.css     |     7 [32m+[m
+ web/static/vendor/css/pages/page-auth.css          |    68 [32m+[m
+ web/static/vendor/css/pages/page-icons.css         |    29 [32m+[m
+ web/static/vendor/css/pages/page-misc.css          |    10 [32m+[m
+ web/static/vendor/css/theme-default.css            |   980 [32m++[m
+ web/static/vendor/fonts/boxicons.css               |  6511 [32m++++++++[m
+ web/static/vendor/fonts/boxicons/boxicons.eot      |   Bin [31m0[m -> [32m292572[m bytes
+ web/static/vendor/fonts/boxicons/boxicons.svg      |  1551 [32m++[m
+ web/static/vendor/fonts/boxicons/boxicons.ttf      |   Bin [31m0[m -> [32m292404[m bytes
+ web/static/vendor/fonts/boxicons/boxicons.woff     |   Bin [31m0[m -> [32m292480[m bytes
+ web/static/vendor/fonts/boxicons/boxicons.woff2    |   Bin [31m0[m -> [32m102988[m bytes
+ web/static/vendor/js/bootstrap.js                  |   809 [32m+[m
+ web/static/vendor/js/helpers.js                    |   101 [32m+[m
+ web/static/vendor/js/menu.js                       |   101 [32m+[m
+ web/static/vendor/libs/apex-charts/apex-charts.css |   746 [32m+[m
+ web/static/vendor/libs/apex-charts/apexcharts.js   |   113 [32m+[m
+ .../vendor/libs/highlight/highlight-github.css     |     1 [32m+[m
+ web/static/vendor/libs/highlight/highlight.css     |    95 [32m+[m
+ web/static/vendor/libs/highlight/highlight.js      |  2158 [32m+++[m
+ web/static/vendor/libs/jq
