@@ -47,10 +47,10 @@ LOG_TO_STDOUT = getenv('LOG_TO_STDOUT')
 # # MAIL_PASSWORD=getenv('MAIL_PASSWORD'),
 # MAIL_DEFAULT_SENDER=getenv('MAIL_USERNAME')
 
-""" ============================ """
+""" ===========                      ======="""
 from distutils.util import strtobool
 MAIL_PORT = int(getenv('MAIL_PORT', 587))  # Ensure this is an integer
-MAIL_USE_TLS = bool(strtobool(getenv('MAIL_USE_TLS', True))) #ensure type is compatible to avoid Flask-Mail [SSL: WRONG_VERSION_NUMBER] wrong version number (_ssl.c:1123)
+MAIL_USE_TLS = bool(strtobool(str(getenv('MAIL_USE_TLS', 'True'))))  # ensure type is compatible to avoid Flask-Mail [SSL: WRONG_VERSION_NUMBER] wrong version number (_ssl.c:1123)
 MAIL_USE_SSL = bool(strtobool(getenv('MAIL_USE_SSL', 'False')))
 # MAIL_USE_TLS = bool(getenv('MAIL_USE_TLS', True))
 # MAIL_USE_SSL = bool(getenv('MAIL_USE_SSL', False))
@@ -59,7 +59,7 @@ DEFAULT_MAIL_SENDER = (getenv('DEFAULT_MAIL_SENDER'), 'Intellect')
 MAIL_SERVER = getenv('MAIL_SERVER')
 MAIL_USERNAME = getenv('MAIL_USERNAME')
 MAIL_PASSWORD = getenv('MAIL_PASSWORD')
-""" ============================ """
+""" ============              ======== """
     
 ADMINS = ['jameschristo962@gmail.com', 'chrisjsmez@gmail.com']
 LANGUAGES = ['en', 'es']
