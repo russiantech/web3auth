@@ -15,6 +15,6 @@ def site_map():
         links.append({'url': rule.rule, 'view': rule.endpoint})
     return jsonify(links), 200
 
-if __name__ == '__main__':
-    #app.run() 
-    app.run(debug=True, port=8001)
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=int(getenv("PORT", 5000)))
+
