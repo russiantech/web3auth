@@ -51,6 +51,11 @@ def create_app():
     configure_extensions(app)
     
     # Register blueprints
+    from web.apis.wallets import wallet_bp
+    app.register_blueprint(wallet_bp, url_prefix="/api")
+    from web.apis.wallet_types import wallet_types_bp
+    app.register_blueprint(wallet_types_bp, url_prefix="/api")
+    
     from web.apis.order import order_bp
     app.register_blueprint(order_bp)
     

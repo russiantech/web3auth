@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request
-from flask_limiter.util import get_remote_address
+# from flask_limiter.util import get_remote_address
 
 from sqlalchemy.exc import InterfaceError, ProgrammingError
+from web.utils import ip_adrs
 from werkzeug.exceptions import MethodNotAllowed
 
 from web.models import db
@@ -63,7 +64,7 @@ def error_429(error):
     db.session.rollback()
     if wants_json_response():
         return api_error_response(429)
-    return render_template('errors/429.html', e=error, client = get_remote_address()), 429 
+    return render_template('errors/429.html', e=error, client = ip_adrs()), 429 
 
 
 @errors_bp.app_errorhandler(500)

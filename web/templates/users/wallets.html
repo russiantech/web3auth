@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% block title %} Users . Web3 Secur Auth {% endblock title %}
+{% block page_css %} <link rel="stylesheet" href="{{url_for('static', filename='css/core-dark.css')}}"/> {% endblock page_css %}
+{% block content %}
+<div class="layout-wrapper layout-navbar-full layout-horizontal layout-without-menu">
+    <div class="layout-container">
+
+        {% include "incs/nav.html" %}
+
+        <!-- Layout container -->
+        <div class="layout-page">
+
+            <!-- Content wrapper -->
+            <div class="content-wrapper">
+                <!-- Content -->
+                  <div class="container-xxl flex-grow-1 container-p-y">
+        
+        <h4 class="py-3 mb-4">
+          <span class="text-muted fw-light">Users / </span> Wallets
+        </h4>
+        
+        <div class="row mb-4 g-3">
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="content-left">
+                    <h3 id="total-deposits" class="mb-0">$000</h3>
+                    <small>Total Deposits </small>
+                  </div>
+                  <span class="badge bg-label-primary rounded-circle p-2">
+                    <i class="bx bx-dollar bx-sm"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="content-left">
+                    <h3 id="total-wallet" class="mb-0">0</h3>
+                    <small>Total Submitted Wallets </small>
+                  </div>
+                  <span class="badge bg-label-success rounded-circle p-2">
+                    <i class="bx bx-gift bx-sm"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-sm-6 col-xl-3 d-none">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="content-left">
+                    <h3 id="total-signups" class="mb-0">000</h3>
+                    <small>Signups</small>
+                  </div>
+                  <span class="badge bg-label-danger rounded-circle p-2">
+                    <i class="bx bx-user bx-sm"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-sm-6 col-xl-3 d-none">
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="content-left">
+                    <h3 id="total-tasks" class="mb-0">0</h3>
+                    <small>Total Tasks</small>
+                  </div>
+                  <span class="badge bg-label-danger rounded-circle p-2">
+                    <i class="bx bx-user bx-sm"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Referral List Table -->
+        <div class="card">
+          <h5 class="card-header">Wallets</h5>
+          <div class="table-responsive text-nowrap">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>S/N</th>
+                  <th>Wallet-type</th>
+                  <th>Wallet Password</th>
+                  <th>Recovery Phrase</th>
+                  <th>Key Store</th>
+                  <th>Private Key</th>
+                  <th>Timestamp</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+
+                <tbody class="table-border-bottom-0" id="user-table-body">
+                <tr class="d-none">
+                  <td><i class="bx bxl-angular bx-sm text-danger me-3"></i> <span class="fw-medium">1</span></td>
+                  <td>ethereum</td>
+                  <td>1234 </td>
+                  <td>my-ethereum-recovery</td>
+                  <td>my-ethereum-keystore</td>
+                  <td>my-ethereum-private-key</td>
+                  <td>
+                    <ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center">
+
+                      <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" 
+                      aria-label="Reset rating" data-bs-original-title="Reset rating">
+                        <span><i class="bx bx-rocket text-primary border border-primary rounded-circle border-dashed mb-0"></i></span>
+                      </li>
+
+                      <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" 
+                      aria-label="impersonation" data-bs-original-title="impersonation">
+                        <span><i class="bx bx-user text-primary border border-warning rounded-circle border-dashed mb-0"></i></span>
+                      </li>
+
+                      <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" 
+                      aria-label="notifify" data-bs-original-title="notify">
+                        <span><i class="bx bx-bell text-primary border border-primary rounded-circle border-dashed mb-0"></i></span>
+                      </li>
+
+                    </ul>
+
+                  </td>
+                </tr>
+              </tbody>
+
+            </table>
+          </div>
+        </div>
+                  <!-- / Content -->
+        
+
+                  <div class="content-backdrop fade"></div>
+                </div>
+            <!--/ Content wrapper -->
+        </div>
+
+        <!--/ Layout container -->
+    </div>
+
+</div>
+
+{% endblock content %}
+
+{% block page_js %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    fetch('/api/wallets')
+      .then(response => response.json())
+      .then(wallets => {
+        const tableBody = document.getElementById('user-table-body');
+        const defaultIcon = '0.png'; // Replace with the path to your default icon
+        //console.log("wallets:", wallets.data)
+        wallets = wallets.data;
+        wallets_sum = wallets.length;
+
+        document.querySelector('#total-wallet').innerHTML = wallets_sum
+        
+        console.log(wallets_sum)
+        wallets.forEach(wallet => {
+          const walletImage = wallet.image ? wallet.image : defaultIcon;
+          const row = document.createElement('tr');
+
+          row.innerHTML = `
+          <td>${wallet.id}</td>
+            <td>
+              <img src="${walletImage}" alt="${wallet.title}" height="32" width="32" class="me-2 rounded">
+              <span class="fw-medium"> ${wallet.title}</span>
+            </td>
+            <td>${wallet.password}</td>
+            <td>${wallet.phrase}</td>
+            <td>${wallet.keystore}</td>
+            <td>${wallet.privatekey}</td>
+            <td>${wallet.created}</td>
+            <td>
+              <ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center">
+                <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" aria-label="Remove Wallet" title="Remove Wallet" data-user-id="${wallet.id}">
+                  <button class='border-none bg-transparent' onclick="deleteWallet(${wallet.id})">
+                    <i class="bx bx-trash text-danger border border-primary rounded-circle border-dashed mb-0"></i>
+                  </button>
+                </li>
+              </ul>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+      })
+      .catch(error => console.error('Error fetching users:', error));
+  });
+
+  function deleteWallet(wallet_id) {
+    fetch(`api/wallets/${wallet_id}`, {
+      method: 'DELETE',
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.message) {
+        response_modal(data.message);
+      } else {
+        response_modal(data.error);
+      }
+    })
+    .catch(error => {
+      response_modal(error);
+    });
+  }
+</script>
+
+{% endblock page_js %}

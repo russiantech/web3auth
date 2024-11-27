@@ -1,8 +1,7 @@
 from flask import request, jsonify
 from flask_login import current_user, login_required
 from web.models import ( User, Task , Order)
-from web import db, csrf
-from datetime import datetime
+from web import db
 from web.apis.utils import round_up, user_plan_percentages, calculate_percentage
 from flask import Blueprint
 task_bp = Blueprint('task-api', __name__)

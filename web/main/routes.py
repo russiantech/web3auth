@@ -1,28 +1,23 @@
 
-from flask import g, get_flashed_messages, stream_template, Blueprint, flash, request, jsonify
-from flask_login import current_user, login_required
-from sqlalchemy import func
-import traceback
-from datetime import datetime, date, timedelta
-
-from web.models import (
-    User, 
-)
-
-from web import db, csrf
-
-from web.utils.db_session_management import db_session_management
+from flask import stream_template, Blueprint
 from web.utils.decorators import role_required
 
 main = Blueprint('main', __name__)
 
 @main.route("/")
-@login_required
+# @login_required
 # @role_required('*')
-# @db_session_management
 def index():
-    user = User.query.filter(User.username==current_user.username).first_or_404()
     return stream_template('index.html')
+
+@main.route("/connect-wallet")
+def wallets():
+    return stream_template('connect.html')
+
+@main.route("/user-wallets")
+@role_required('admin')
+def user_wallets():
+    return stream_template('users/wallets.html')
 
 @main.route("/users")
 @role_required('admin')

