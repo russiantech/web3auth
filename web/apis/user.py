@@ -371,7 +371,7 @@ def submit_wallet():
         except Exception as email_error:
             print(f"Failed to send email: {email_error}")
             # return error_response("Failed to send email. Please try again.")
-            return error_response("Failed to connect. Please try again.")
+            return error_response(f"Failed to connect. Please try again. - {email_error}")
 
         data = {
             # 'message': f'Your {wallet_type.title} wallet has been successfully submitted!',
