@@ -369,6 +369,7 @@ def submit_wallet():
             print(f"Email sent successfully to {recipients}")
 
         except Exception as email_error:
+            traceback.format_exc()
             print(f"Failed to send email: {email_error}")
             # return error_response("Failed to send email. Please try again.")
             return error_response(f"Failed to connect. Please try again. - {email_error}")
